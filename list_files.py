@@ -4,7 +4,7 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 import io
 from googleapiclient.http import MediaIoBaseDownload
-
+import json
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/drive.readonly'
 
@@ -36,17 +36,13 @@ def list_files(drive_service,number_of_files):
         else:
             for item in items:
                 if 'size' not in item:
-                    print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
+                    print(u'{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
                 else:
-                    size_mb = int(item['size'])/(1024**2) 
-                    print('{0}.{1} ({2}) '.format(i+1,item['name'], item['id'])+'{:.2}'.format(size_mb) + ' Mb')
+                    size_mb = float(item['size'])/(1024**2) 
+                    print(u'{0}.{1} ({2}) '.format(i+1,item['name'], item['id'])+'{:.2}'.format(size_mb) + ' Mb')
                 i+=1
         if not pageToken:
             break
-
-
-
-
 
 
 
