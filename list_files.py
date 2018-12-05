@@ -23,9 +23,10 @@ def auth(token,credentials):
     drive_service = build('drive', 'v3', http=creds.authorize(Http()))
     return drive_service
 
-def list_files(drive_service,number_of_files):
+def get_file_list(drive_service,number_of_files=999999999):
     i = 0
     pageToken = 0
+    fileList = []
     if number_of_files < 100:
         pageSize = number_of_files
     else:
@@ -33,31 +34,37 @@ def list_files(drive_service,number_of_files):
     while i<number_of_files:
         if i==0:
             root_id = drive_service.files().get(fileId="root").execute()['id']
-            print(root_id)
+            # print(root_id)
             results = drive_service.files().list(pageSize=pageSize,fields="nextPageToken, files(id,name,size,parents,mimeType)").execute()
         else:
             results = drive_service.files().list(pageSize=pageSize,pageToken=pageToken,fields="nextPageToken, files(id,name,size,mimeType)").execute()
         items = results.get('files', [])
         pageToken = results.get('nextPageToken')
         if not items:
-            print("Files not found")
+            # print("Files not found")
+            break
         else:
             for item in items:
-                if 'size' not in item:
-                    if item['mimeType'] == "application/vnd.google-apps.folder":
-                        print('{0}.{1} ({2}), Directory'.format(i+1,item['name'], item['id']))
-                    else:
-                        print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
-                        print(item['mimeType'])
+                # if 'size' not in item:
+                #     if item['mimeType'] == "application/vnd.google-apps.folder":
+                #         print('{0}.{1} ({2}), Directory'.format(i+1,item['name'], item['id']))
+                #     else:
+                #         print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
+                #         print(item['mimeType'])
                     
-                else:
-                    print('{0}.{1} ({2}), Size: '.format(i+1,item['name'], item['id'])+'{:.2}'.format(mb(item['size'])) + ' Mb')
-                i+=1
+                # else:
+                #     print('{0}.{1} ({2}), Size: '.format(i+1,item['name'], item['id'])+'{:.2}'.format(mb(item['size'])) + ' Mb')
+                fileList.append(item)
+                i+=1       
         if not pageToken:
             break
+    return fileList
 
 
 
+def get_root_id(drive_service):
+    root_id = drive_service.files().get(fileId="root").execute()['id']
+    return root_id
 
 
 
