@@ -4,10 +4,15 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 import io
 from googleapiclient.http import MediaIoBaseDownload
-
+import json
+import pprint
 # If modifying these scopes, delete the file token.json.
-SCOPES = 'https://www.googleapis.com/auth/drive.readonly'
+SCOPES = 'https://www.googleapis.com/auth/drive'
 
+
+kb = lambda x : int(x) / (1024**1)
+mb = lambda x : int(x) / (1024**2)
+gb = lambda x : int(x) / (1024**3)
 
 def auth(token,credentials):
     store = file.Storage(token)
@@ -20,15 +25,18 @@ def auth(token,credentials):
 
 def list_files(drive_service,number_of_files):
     i = 0
+    pageToken = 0
     if number_of_files < 100:
         pageSize = number_of_files
     else:
         pageSize = 100
     while i<number_of_files:
         if i==0:
-            results = drive_service.files().list(pageSize=pageSize,fields="nextPageToken, files(id,name,size)").execute()
+            root_id = drive_service.files().get(fileId="root").execute()['id']
+            print(root_id)
+            results = drive_service.files().list(pageSize=pageSize,fields="nextPageToken, files(id,name,size,parents,mimeType)").execute()
         else:
-            results = drive_service.files().list(pageSize=pageSize,pageToken=pageToken,fields="nextPageToken, files(id,name,size)").execute()
+            results = drive_service.files().list(pageSize=pageSize,pageToken=pageToken,fields="nextPageToken, files(id,name,size,mimeType)").execute()
         items = results.get('files', [])
         pageToken = results.get('nextPageToken')
         if not items:
@@ -36,10 +44,14 @@ def list_files(drive_service,number_of_files):
         else:
             for item in items:
                 if 'size' not in item:
-                    print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
+                    if item['mimeType'] == "application/vnd.google-apps.folder":
+                        print('{0}.{1} ({2}), Directory'.format(i+1,item['name'], item['id']))
+                    else:
+                        print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
+                        print(item['mimeType'])
+                    
                 else:
-                    size_mb = int(item['size'])/(1024**2) 
-                    print('{0}.{1} ({2}) '.format(i+1,item['name'], item['id'])+'{:.2}'.format(size_mb) + ' Mb')
+                    print('{0}.{1} ({2}), Size: '.format(i+1,item['name'], item['id'])+'{:.2}'.format(mb(item['size'])) + ' Mb')
                 i+=1
         if not pageToken:
             break
