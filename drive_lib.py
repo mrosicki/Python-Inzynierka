@@ -2,10 +2,9 @@ from __future__ import print_function
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-import io
+import io,os
 from googleapiclient.http import MediaIoBaseDownload
 import json
-import pprint
 # If modifying these scopes, delete the file token.json.
 SCOPES = 'https://www.googleapis.com/auth/drive'
 
@@ -33,8 +32,8 @@ def get_file_list(drive_service,number_of_files=999999999):
         pageSize = 100
     while i<number_of_files:
         if i==0:
-            root_id = drive_service.files().get(fileId="root").execute()['id']
-            # print(root_id)
+            # root_id = drive_service.files().get(fileId="root").execute()['id']
+            # # print(root_id)
             results = drive_service.files().list(pageSize=pageSize,fields="nextPageToken, files(id,name,size,parents,mimeType)").execute()
         else:
             results = drive_service.files().list(pageSize=pageSize,pageToken=pageToken,fields="nextPageToken, files(id,name,size,mimeType)").execute()
@@ -60,19 +59,72 @@ def get_file_list(drive_service,number_of_files=999999999):
             break
     return fileList
 
-
-
 def get_root_id(drive_service):
     root_id = drive_service.files().get(fileId="root").execute()['id']
     return root_id
 
+def make_children(fileList):
+        for i in fileList:
+            i['children'] = []
+            for j in fileList:
+                if('parents' in j):
+                    if(j['parents'][0]==i['id']):
+                        i['children'].append(j['id'])
 
+def get_file_name(id,fileList):
+    for i in fileList:
+        if(i['id']==id):
+            return i['name']
 
+def get_contents(id,fileList):
+    content = []
+    for i in fileList:
+        if('parents' in i):
+            if(i['parents'][0]==id):
+                content.append(i)
+    return content
 
+def tree(id,fileList,level=0):
+    # print("Doing rekt for " + str(id))
+    for k in fileList:
+        if(k['id']==id):
+            if(level==0):
+                print(' +' + k['name'])
+            else:
+                print((level)*' |' + ' +' + k['name'])
+    for i in get_contents(id,fileList):
+        tree(i['id'],fileList,level+1)
 
+def get_usage_formated(x,y):
+    x = gb(x)
+    y = gb(y)
+    percentage = '{:05.2f}'.format(float(int(x)*100/int(y)))
+    message = '{:.2f}'.format(x) + '/' + '{:.2f}'.format(y) + ' (' + percentage +'%)'
+    return message
 
+def get_usage(drive_service):
+    about = drive_service.about().get(fields="storageQuota").execute()
+    usage = about['storageQuota']['usage']
+    return usage
 
+def get_limit(drive_service):
+    about = drive_service.about().get(fields="storageQuota").execute()
+    limit = about['storageQuota']['limit']
+    return limit
+    
+def get_user(drive_service):
+    user = drive_service.about().get(fields="user").execute()
+    email = user['user']['emailAddress']
+    return email
 
+def get_emails():
+    users = {}
+    for i in range (1,len(os.listdir('.\\Tokens'))+1):
+        token = '.\\Tokens\\token00' + str(i) +'.json'
+        credendtials = '.\\Credentials\\credentials00' + str(i) + '.json'
+        user = get_user(auth(token,credendtials))
+        users[i] = user
+    return(users)
 
 
 
