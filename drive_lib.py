@@ -76,6 +76,11 @@ def get_file_name(id,fileList):
         if(i['id']==id):
             return i['name']
 
+def get_file(id,fileList):
+    for i in fileList:
+        if(i['id']==id):
+            return i
+
 def get_contents(id,fileList):
     content = []
     for i in fileList:
@@ -126,8 +131,36 @@ def get_emails():
         users[i] = user
     return(users)
 
-
-
+def download_file(file_id,fileList,drive_service):
+    mimeType = get_file(file_id,fileList)['mimeType']
+    fileName = get_file_name(file_id,fileList)
+    if('application/vnd.google-apps.' in mimeType):
+        if('document' in mimeType):
+            # print('This is a document')
+            conversion = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            fileName = fileName + '.docx'
+        elif('spreadsheet' in mimeType):
+            # print('This is a sheet')
+            conversion = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            fileName = fileName + '.xls'
+        elif('presentation' in mimeType):
+            # print('This is a presentation')
+            conversion = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            fileName = fileName + '.ppt'
+        else:
+            conversion = 'application/pdf'
+            fileName = fileName + '.pdf'
+        request = drive_service.files().export_media(fileId=file_id,mimeType=conversion)
+        # print('Tak')
+    else:
+        request = drive_service.files().get_media(fileId=file_id)
+        # print('Nie')
+    fh = io.FileIO(fileName,'wb')
+    downloader = MediaIoBaseDownload(fh,request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        # print "Download %d%%." % int(status.progress() * 100)
 
 # file_number = int(input('Number of file you want to download?\n'))
 # onefile = total[file_number]
