@@ -9,9 +9,9 @@ import json
 SCOPES = 'https://www.googleapis.com/auth/drive'
 
 
-kb = lambda x : int(x) / (1024**1)
-mb = lambda x : int(x) / (1024**2)
-gb = lambda x : int(x) / (1024**3)
+kb = lambda x : float(x) / (1024**1)
+mb = lambda x : float(x) / (1024**2)
+gb = lambda x : float(x) / (1024**3)
 
 def auth(token,credentials):
     store = file.Storage(token)
@@ -58,6 +58,45 @@ def get_file_list(drive_service,number_of_files=999999999):
         if not pageToken:
             break
     return fileList
+
+
+
+def print_file_list(drive_service,number_of_files=999999999):
+    i = 0
+    pageToken = 0
+    fileList = []
+    if number_of_files < 100:
+        pageSize = number_of_files
+    else:
+        pageSize = 100
+    while i<number_of_files:
+        if i==0:
+            # root_id = drive_service.files().get(fileId="root").execute()['id']
+            # # print(root_id)
+            results = drive_service.files().list(pageSize=pageSize,fields="nextPageToken, files(id,name,size,parents,mimeType)").execute()
+        else:
+            results = drive_service.files().list(pageSize=pageSize,pageToken=pageToken,fields="nextPageToken, files(id,name,size,mimeType)").execute()
+        items = results.get('files', [])
+        pageToken = results.get('nextPageToken')
+        if not items:
+            print("Files not found")
+            break
+        else:
+            for item in items:
+                if 'size' not in item:
+                    if item['mimeType'] == "application/vnd.google-apps.folder":
+                        print('{0}.{1} ({2}), Directory'.format(i+1,item['name'], item['id']))
+                    else:
+                        print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
+                        print(item['mimeType'])                   
+                else:
+                    print('{0}.{1} ({2}), Size: '.format(i+1,item['name'], item['id'])+'{:.2}'.format(mb(item['size'])) + ' Mb')
+                fileList.append(item)
+                i+=1       
+        if not pageToken:
+            break
+    return fileList
+
 
 def get_root_id(drive_service):
     root_id = drive_service.files().get(fileId="root").execute()['id']
@@ -124,9 +163,9 @@ def get_user(drive_service):
 
 def get_emails():
     users = {}
-    for i in range (1,len(os.listdir('.\\Tokens'))+1):
-        token = '.\\Tokens\\token00' + str(i) +'.json'
-        credendtials = '.\\Credentials\\credentials00' + str(i) + '.json'
+    for i in range (1,len(os.listdir('./Token'))+1):
+        token = './Token/token00' + str(i) +'.json'
+        credendtials = './Credentials/credentials00' + str(i) + '.json'
         user = get_user(auth(token,credendtials))
         users[i] = user
     return(users)
@@ -160,7 +199,7 @@ def download_file(file_id,fileList,drive_service):
     done = False
     while done is False:
         status, done = downloader.next_chunk()
-        # print "Download %d%%." % int(status.progress() * 100)
+        print ("Download %d%%." % int(status.progress() * 100))
 
 # file_number = int(input('Number of file you want to download?\n'))
 # onefile = total[file_number]
