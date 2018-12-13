@@ -1,5 +1,9 @@
 *.json
+<<<<<<< HEAD
 *.pyc
 *.jpg
 *.xls
 *.docx
+=======
+*.pyc
+>>>>>>> 285523c85ffe4c230fd2603079d2d72b66ca2254
