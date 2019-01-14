@@ -67,7 +67,7 @@ while(True):
         print(' +root')
         tree(get_root_id(drives[int(drive)-1]),get_file_list(drives[int(drive)-1]))
         file_id = raw_input('Put file id ')
-        download_file(file_id,get_file_list(drives[int(drive)-1]),drives[int(drive)-1])
+        # download_file(file_id,get_file_list(drives[int(drive)-1]),drives[int(drive)-1])
     elif('clear'==string):
         os.system('clear')
     elif('tree'==string):
