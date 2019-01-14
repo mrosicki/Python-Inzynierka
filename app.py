@@ -9,6 +9,8 @@ import sys,os
 import time
 # from clear import clear
 
+
+
 print('=======================================================================')
 print('|                                                                     |')
 print('|                                                                     |')
@@ -16,6 +18,7 @@ print('|                   Welcome to google drive manager                   |')
 print('|                                                                     |')
 print('|              please wait while your drives are loading              |')
 print('|                                                                     |')
+print('|             type help to see list of available commands             |')
 print('|                                                                     |')
 print('=======================================================================')
 drives = []
@@ -24,7 +27,7 @@ for i in range(1,len(os.listdir('./Token'))+1):
     Credentials = './Credentials/credentials00' + str(i) + '.json'
     drive_service = auth(Token,Credentials)
     drives.append(drive_service)
-time.sleep(2)
+time.sleep(4)
 os.system('clear')
 
 while(True):
@@ -52,6 +55,17 @@ while(True):
         for k,v in emails.items():
             print(str(k) +' '+v)
         drive = raw_input('From which drive?(number) ')
+        file_id = raw_input('Put file id ')
+        download_file(file_id,get_file_list(drives[int(drive)-1]),drives[int(drive)-1])
+    elif('clear'==string):
+        os.system('clear')
+    elif('tree'==string):
+        emails = get_emails()
+        for k,v in emails.items():
+            print(str(k) +' '+v)
+        drive = raw_input('Which drive? ')
+        print(' +root')
+        tree(get_root_id(drives[int(drive)-1]),get_file_list(drives[int(drive)-1]))
         file_id = raw_input('Put file id ')
         download_file(file_id,get_file_list(drives[int(drive)-1]),drives[int(drive)-1])
     elif('clear'==string):

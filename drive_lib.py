@@ -88,7 +88,7 @@ def print_file_list(drive_service,number_of_files=999999999):
                         print('{0}.{1} ({2}), Directory'.format(i+1,item['name'], item['id']))
                     else:
                         print('{0}.{1} ({2}), Size: Not Available'.format(i+1,item['name'], item['id']))
-                        print(item['mimeType'])                   
+                        # print(item['mimeType'])                   
                 else:
                     print('{0}.{1} ({2}), Size: '.format(i+1,item['name'], item['id'])+'{:.2}'.format(mb(item['size'])) + ' Mb')
                 fileList.append(item)
